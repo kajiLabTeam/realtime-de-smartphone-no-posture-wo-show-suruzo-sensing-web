@@ -1,7 +1,7 @@
 import { SensorData } from '@/hooks/useSensor';
 
 export const fetchSensorData = async (sensorDataList: SensorData[]) => {
-  const url = new URL(import.meta.env.VITE_API_BASE_URL);
+  const url = new URL('/api/raw', import.meta.env.VITE_API_BASE_URL);
 
   try {
     const res = await fetch(url, {

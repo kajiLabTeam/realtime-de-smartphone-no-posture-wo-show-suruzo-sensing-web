@@ -19,6 +19,7 @@ interface AccelerometerState {
 }
 
 export interface SensorData {
+  timestamp: number;
   acceleration: AccelerometerState;
   gyroscope: GyroscopeState;
 }
@@ -39,7 +40,9 @@ export function useSensor(callack?: Callback & CallbackPromise, intervalMs = 500
 
   const handleMotion = useCallback((e: DeviceMotionEvent) => {
     const { accelerationIncludingGravity, rotationRate } = e;
+    const now = Date.now();
     const tmpData: SensorData = {
+      timestamp: now,
       acceleration: {
         x: accelerationIncludingGravity?.x ?? null,
         y: accelerationIncludingGravity?.y ?? null,

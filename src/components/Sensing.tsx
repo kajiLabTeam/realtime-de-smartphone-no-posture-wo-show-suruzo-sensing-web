@@ -7,9 +7,7 @@ const Container = styled.div`
 `;
 
 export default function Sensing() {
-  const [sensorData, { revokePermission }] = useSensor(async (data) => {
-    const res = await fetchSensorData(data);
-  });
+  const [sensorData, { revokePermission }] = useSensor(async (data) => await fetchSensorData(data));
 
   return (
     <Container>

@@ -7,27 +7,24 @@ const Container = styled.div`
 `;
 
 export default function Sensing() {
-  const [sensorDataList, { revokePermission }] = useSensor(async (data) => {
+  const [sensorData, { revokePermission }] = useSensor(async (data) => {
     const res = await fetchSensorData(data);
-    console.log(res);
-  }, 500);
-
-  const lastData = sensorDataList.at(-1);
+  });
 
   return (
     <Container>
       <div>
         <h2>加速度</h2>
-        <p>x: {lastData?.acceleration.x}</p>
-        <p>y: {lastData?.acceleration.y}</p>
-        <p>z: {lastData?.acceleration.z}</p>
+        <p>x: {sensorData?.acceleration.x}</p>
+        <p>y: {sensorData?.acceleration.y}</p>
+        <p>z: {sensorData?.acceleration.z}</p>
       </div>
 
       <div>
         <h2>角速度</h2>
-        <p>x: {lastData?.gyroscope.x}</p>
-        <p>y: {lastData?.gyroscope.y}</p>
-        <p>z: {lastData?.gyroscope.z}</p>
+        <p>x: {sensorData?.gyroscope.x}</p>
+        <p>y: {sensorData?.gyroscope.y}</p>
+        <p>z: {sensorData?.gyroscope.z}</p>
       </div>
 
       <button onClick={revokePermission}>停止</button>

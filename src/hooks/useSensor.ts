@@ -1,5 +1,5 @@
 import { atom, useAtom } from 'jotai';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 // Define an extended interface for DeviceOrientationEvent including requestPermission
 interface DeviceOrientationEventExtended extends DeviceOrientationEvent {
@@ -28,15 +28,14 @@ const isPermissionGrantedAtom = atom(
   typeof (DeviceOrientationEvent as unknown as DeviceOrientationEventExtended).requestPermission !== 'function',
 );
 
-type Callback = (data: SensorData[]) => void;
-type CallbackPromise = (data: SensorData[]) => Promise<void>;
+type Callback = (data: SensorData) => void;
+type CallbackPromise = (data: SensorData) => Promise<void>;
 
-export function useSensor(callack?: Callback & CallbackPromise, intervalMs = 500) {
+export function useSensor(callack?: Callback & CallbackPromise) {
   const isSupported = typeof window.DeviceOrientationEvent !== 'undefined';
   const [isPermissionGranted, setIsPermissionGranted] = useAtom(isPermissionGrantedAtom);
 
-  const sensorDataListRef = useRef<SensorData[]>([]);
-  const [sensorDataList, setSensorDataList] = useState<SensorData[]>([]);
+  const [sensorData, setSensorData] = useState<SensorData>();
 
   const handleMotion = useCallback((e: DeviceMotionEvent) => {
     const { accelerationIncludingGravity, rotationRate } = e;
@@ -49,14 +48,12 @@ export function useSensor(callack?: Callback & CallbackPromise, intervalMs = 500
         z: accelerationIncludingGravity?.z ?? null,
       },
       gyroscope: {
-        x: rotationRate?.alpha ?? null,
-        y: rotationRate?.beta ?? null,
-        z: rotationRate?.gamma ?? null,
+        x: (rotationRate?.alpha ?? 0) * (Math.PI / 180),
+        y: (rotationRate?.beta ?? 0) * (Math.PI / 180),
+        z: (rotationRate?.gamma ?? 0) * (Math.PI / 180),
       },
     };
-    const clonedSensorDataList = structuredClone(sensorDataListRef.current);
-    clonedSensorDataList.push(tmpData);
-    sensorDataListRef.current = clonedSensorDataList;
+    setSensorData(tmpData);
   }, []);
 
   useEffect(() => {
@@ -70,17 +67,8 @@ export function useSensor(callack?: Callback & CallbackPromise, intervalMs = 500
   }, [isPermissionGranted, handleMotion]);
 
   useEffect(() => {
-    if (!isPermissionGranted) return;
-
-    const interval = setInterval(() => {
-      const clonedSensorDataList = structuredClone(sensorDataListRef.current);
-      sensorDataListRef.current = [];
-      setSensorDataList(clonedSensorDataList);
-      if (callack) callack(clonedSensorDataList);
-    }, intervalMs);
-
-    return () => clearInterval(interval);
-  }, [callack, intervalMs, isPermissionGranted, sensorDataListRef]);
+    if (sensorData) callack?.(sensorData);
+  }, [callack, sensorData]);
 
   const requestPermission = useCallback(async () => {
     const deviceOrientationEvent = DeviceOrientationEvent as unknown as DeviceOrientationEventExtended;
@@ -99,5 +87,5 @@ export function useSensor(callack?: Callback & CallbackPromise, intervalMs = 500
     setIsPermissionGranted(false);
   }, [setIsPermissionGranted]);
 
-  return [sensorDataList, { requestPermission, isPermissionGranted, isSupported, revokePermission }] as const;
+  return [sensorData, { requestPermission, isPermissionGranted, isSupported, revokePermission }] as const;
 }
